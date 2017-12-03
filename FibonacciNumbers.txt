@@ -1,0 +1,203 @@
+/*
+    The Fibonacci Numbers are the numbers in the following
+     integer sequence ->
+
+        0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144
+
+    In mathematical terms, the sequence Fn of Fibonacci
+    Numbers is defined by the recurrence relation
+
+    Fn = Fn-1 + Fn-2
+    with the seed values as
+    F0 = 0
+    F1 = 1
+ */
+
+public class FNumbers {
+
+    /*
+        The time complexity of this recursive formulation of
+         Fnumbers is exponential and is given by
+        T(n) = T(n - 1) + T(n - 2)
+        This approach does a lot of repeated work and is bad!
+        Also extra space it takes here is O(n) as max to max the
+         stack goes till a depth of n. So maximum space
+        consumed over the whole duration is at that point.
+     */
+    public int fibRecursive(int n){
+        if(n <= 1){ // this is smart as F(0) = 0
+                    // and F(1) = 1 so the conditions can be clubbed together.
+            return n;
+        }
+        return fibRecursive(n - 1) + fibRecursive(n - 2);
+    }
+
+    /*
+       Time complexity here is O(n)
+        Space complexity here is O(n)
+     */
+    public int fibDynamic(int n){
+        int[] fb = new int[n + 1]; // this would first declare an array of size at least 1.
+        fb[0] = 0; // we can confidently do it. There is no issue of runtime error.
+        if(n > 0){
+            fb[1] = 1; // we cant just openly do it. What if I gave an input as 0.
+                       // Then this would generate IndexOutOfBoundsException.
+        }
+        // This automatically checks conditions so we need not to worry about Exceptions here.
+        for(int i = 2; i <= n; i++){
+            fb[i] = fb[i-1] + fb[i-2];
+        }
+        // No need to return multiple times. This would take into account all the cases.
+        return fb[n];
+    }
+
+    /*
+        At any time we only need the previous two numbers for computing the present value.
+        Hence we can simply discard the previous locations of the array i.e. we need constant
+        space here.
+        Time Complexity - O(n)
+        Space Complexity - O(1)
+     */
+
+    public int fibSpaceOptimizedDp(int n){
+        if(n == 0){
+            return 0;
+        }
+        int answer = 1; // checking explicitly the condition
+                        // for n == 1 would be redundant and repetition.
+        int temp1 = 0;
+        int temp2 = 1;
+
+        for(int i = 2; i <= n; i++){
+            answer = temp1 + temp2;
+            temp1 = temp2;
+            temp2 = answer;
+        }
+
+        return answer;
+    }
+
+    /*
+        This another O(n) time algorithm which relies on the fact
+        that if we multiply the matrix M = {{1, 1}, {1, 0}}
+        to itself(in other words calculate power(M, n)), then we
+         get Fn+1 as the element at row and column (0, 0)
+        in the resultant matrix. THe matrix representation gives
+        the following closed expression for the Fibonacci
+        numbers:
+        |1   1|n   |Fn+1    Fn|
+        |1   0|  = |Fn    Fn-1|
+     */
+
+    /*
+        The time complexity for this algorithm is O(n)
+        and the space complexity for this algorithm is constant
+    */
+
+    public int fibMatrix(int n){
+        if(n == 0){
+            return 0;
+        }
+        int[][] F = new int[][]{{1, 1}, {1, 0}};
+        power(F, n - 1);
+        return F[0][0];
+    }
+
+    // A helper function to multiply two matrices for fibMatrix and store the resultant matrix in F again.
+    private void multiply(int[][] F, int[][] M){
+        int x = F[0][0] * M[0][0] + F[0][1] * M[1][0]; // If I were to assign it to F directly then it would have been wrong
+        int y = F[0][0] * M[0][1] + F[0][1] * M[1][1]; // as we want would have used it in the next computation which would
+        int u = F[1][0] * M[0][0] + F[1][1] * M[1][0]; // give the wrong answer
+        int v = F[1][0] * M[0][1] + F[1][1] * M[1][1];
+
+        F[0][0] = x;
+        F[0][1] = y;
+        F[1][0] = u;
+        F[1][1] = v;
+    }
+
+    private void power(int[][] F, int n){
+        if(n == 0){
+            return;
+        }
+        int[][] M = new int[][]{{1, 1}, {1, 0}};
+        for(int i = 2; i <= n; i++){
+            multiply(F, M);
+        }
+    }
+
+    /*
+        This is similar to the previous approach. We just act a bit smart here.
+        We don't multiply the matrix M plainly n times, instead we do it in logarithm time
+        using the fact that M^n = (M^n/2)^2.
+        Hence the total time complexity for this algorithm is O(logn) and the space complexity
+        is O(logn).
+     */
+
+    public int fibOptimizedMatrix(int n){
+        if(n == 0){
+            return 0;
+        }
+        int[][] F = new int[][]{{1, 1}, {1, 0}};
+        powerOptm(F, n-1);
+        return F[0][0];
+    }
+
+    private void powerOptm(int[][] F, int n) {
+        if(n == 0 || n == 1){
+            return;
+        }
+        int[][] M = new int[][]{{1, 1}, {1, 0}};
+        powerOptm(F, n/2);
+        multiply(F, F);
+
+        if(n % 2 != 0){
+            multiply(F, M);
+        }
+    }
+
+    /*
+        This algorithm is based on the concept that Fn can
+         not only be determined by its preceding two neighbours but
+        also by their Fn/2's and vicinity. It is related through an equation as follow ->
+            F(n) = F(n/2) * F(n/2) + F(n/2 - 1) * F(n/2) * 2    if n is even.
+            and
+            F(n) = F(n+1/2) * F(n+1/2) + F(n+1/2 - 1) * F(n+1/2 - 1)    if n is odd.
+
+            Time complexity - O(Logn)
+            Space complexity - O(Logn)
+     */
+
+    public int fibInnovative(int n){
+        if(n <= 1){
+            return n;
+        }
+        // If we have arrived at this step then n must be at least 2.
+        Map<Integer, Integer> map = new HashMap<>();
+        map.put(0, 0);
+        map.put(1, 1);
+        // Atleast n = 2 ka nikalne ka bol raha yeh kyonki varna would have handled.
+        return fibInnovativeHelper(n, map);
+    }
+
+    private int fibInnovativeHelper(int n, Map<Integer, Integer> map){
+        if(map.get(n) != null){
+            return map.get(n);
+        }
+        int temp1 = fibInnovativeHelper(n/2, map);
+        int answer;
+        if(n % 2 == 0){
+            int temp2 = fibInnovativeHelper(n/2 - 1, map);
+            answer = temp1*temp1 + temp2*temp1*2;
+            map.put(n, answer);
+            return answer;
+        }
+        else{
+            int temp3 = fibInnovativeHelper((n+1)/2, map);
+            answer = temp1*temp1 + temp3*temp3;
+            map.put(n, answer);
+            return answer;
+        }
+    }
+
+}
