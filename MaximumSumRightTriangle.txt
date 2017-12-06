@@ -1,0 +1,94 @@
+
+/*
+    Given a right triangle of numbers, we want to find the largest of the sum of numbers that
+    appear on the paths starting from the top towards the base, so that on each path the next
+    number is located directly below or below and one place to the right.
+
+    For example:
+                    2
+                    4 1
+                    1 2 7
+
+                    Output: 10
+                    Explanation: 2 + 1 + 7
+
+
+    Just like every other problem I first imagine that this problem is already solved. What would
+    have been the last step that I took. Either I must have selected 1 or 2 or 7. This gives me a
+    hint for the sub problem. I have to find the costliest path to reach from the top row to
+    the bottom row. Now if I find the costliest path to every node present in the bottom row and in
+    turn find the maximum among those, then I can clearly say what is the costliest way to reach
+    the bottom row from the top row.
+
+    So I define my problem in terms of C[i, j] which denotes the costliest path to reach the node
+    (i, j). Now clearly to I can reach (i, j) from either (i - 1, j) or (i - 1, j - 1). Now its
+    very easy to say that the costliest path to reach (i, j) i.e. C[i, j] is nothing but the bigger
+    of the two i.e. maxOf(C[i - 1, j], C[i - 1, j - 1]) + Value(i, j). This is because among all such
+    paths that reach (i, j) they have to pass through (i - 1, j) or (i - 1, j - 1) and lets assume that
+    we already know what is the costliest path to reach (i - 1, j) i.e. we know C[i - 1, j] as well as
+    C[i - 1, j - 1]. Clearly the greater of these two will give us the costliest path to (i, j). Hence
+    we can say that
+                    C[i, j] = Max(C[i - 1, j], C[i - 1, j - 1]) + Value(i, j);
+    Its very easy to see that the sub problems overlap(obvious here!). Hence we should use dynamic programming
+    here. Either I could use recursion with memoization or I can go up in a bottom up manner. I would use the
+    latter as its a bit easy to code and more intuitive here for me. Also, it wouldn't matter complexity wise as
+    well as eventually we want to calculate the maximum among the last row. So we would have to compute everything
+    above it. So its better to go progressively and systematically from the bottom and go till the top.
+
+    NOTE: However if the problem would have been just to determine the costliest path to reach (i, j) then I would have
+    used recursion with memoization. This is because there are very few things that needs to be solved and saved. Hence my
+    memo table would have been less populated as only a few sub problems(compared to whole table ofcourse its very few!)
+    needs to be solved. I would have also encountered overhead call stack of O(number of rows) but that's not much I guess.
+    Added to that time complexity would also be reduced by following the similar argument. Its better to do these type of
+    analysis as they would make things more clear and enhance the vision.
+ */
+
+public class MaximumSumRightTriangle {
+
+    public int costliestPathSum(int[][] rightTriangle){
+        int numberOfRows = rightTriangle.length;
+        if(numberOfRows == 0){ // What if the given matrix is empty. It is a valid(not senseless!) boundary case.
+            return 0;
+        }
+        int numberOfColumns = rightTriangle[numberOfRows - 1].length; // This is to prevent the compile time error
+                                                                        // if a right triangle matrix is given to us.
+        if(numberOfColumns == 0){
+            return 0;
+        }
+        int[][] dpMatrix = new int[numberOfRows][numberOfColumns]; // numberOfRows and numberOfColumns are atleast 1 here.
+        // Filling out the known and obvious things.
+        dpMatrix[0][0] = rightTriangle[0][0]; // no risk of compile time error here.
+        // Filling the first column as its quite obvious.
+        for(int i = 1; i < numberOfRows; i++){
+            dpMatrix[i][0] += dpMatrix[i - 1][0] + rightTriangle[i][0];
+        }
+        // Filling the diagonal as it is quite obvious as well.
+        for(int i = 1; i < numberOfRows; i++){
+            dpMatrix[i][i] += dpMatrix[i - 1][i - 1] + rightTriangle[i][i];
+        }
+
+        for(int i = 1; i < numberOfRows; i++){
+            for(int j = 1; j <= i; j++){
+                dpMatrix[i][j] = Math.max(dpMatrix[i - 1][j], dpMatrix[i - 1][j - 1]) + rightTriangle[i][j];
+            }
+        }
+
+        int costliestPath = Integer.MIN_VALUE;
+        for(int j = 0; j < numberOfColumns; j++){
+            if(dpMatrix[numberOfRows - 1][j] > costliestPath){
+                costliestPath = dpMatrix[numberOfRows - 1][j];
+            }
+        }
+
+        // This is used for debugging
+//        for(int i = 0; i < numberOfRows; i++){
+//            for(int j = 0; j < numberOfColumns; j++){
+//                System.out.print(dpMatrix[i][j] + " ");
+//            }
+//            System.out.println();
+//        }
+
+        return costliestPath;
+    }
+
+}
