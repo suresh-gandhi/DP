@@ -1,0 +1,95 @@
+/*
+    We are given a matrix order(N X N)(it wouldn't matter if we would have been given a rectangular matrix too)
+    which is binary(consisting of only 0's and 1's).
+    The problem is to find the number of endless points in the square matrix.
+
+    An endless point in a matrix is defined as a point (i, j) which has the following characteristic's ->
+        1. value(i, j) = 1
+        2. If we go indefinitely(as far as we can) towards right then all those values that we
+        encounter should be 1(if at all we encounter something it should be 1 only I mean to say).
+        3. Same point as above but valid for the column i.e. if we move down as much as we can
+        then we should encounter 1 only(if at all we encounter anything it should be 1 only I mean
+        to say).
+
+    As soon as I looked at this problem I began to search for the sub problem. I thought on the following grounds ->
+    So if we can check whether a point is an endless point somehow using sub problems and bla and bla and slowly built up
+    our matrix then our problem is solved I suppose as in O(n2) scan we will see which were those points which were endless
+    and count them or perhaps we could even count them while building up our matrix. They both really mean the same thing if
+    you look at it closely.
+
+    We use this strategy over and over again in dynamic programming. In max sum cont. sub array problem we first found
+    max sum of all the arrays ending at that particular index for all the indices and then took a maximum among them with
+    a linear scan. Similarly when solving the right triangle problem we had to find the costliest way to reach the bottom,
+    we found the costliest way to reach every fucking node at the bottom and then took a maximum among them. Similarly here,
+    we determine for all the points whether they are endless or not and with just a quadratic scan(which is the bare minimum
+    I guess we have to do, although not sure about it) we can determine the number of endless points.
+
+    Now I just have to check whether a point (i, j) is an endless point. If the point (i, j) is an endless point if and only if
+    it is 1, all on the right are 1 and all on the bottom are 1. So basically it an endless row point as well as an endless column
+    point. Yeah! that makes sense. So basically we just need to check for all the points whether they are endless row points
+    or endless column points. This task is quite obvious and can be easily figured out in terms of sub sub problems and then
+    can be easily done in a bottom up fashion.
+
+ */
+
+public class EndlessPoints {
+
+    public int findTheNumberOfEndlessPoints(int[][] grid){
+        int order = grid.length; // We are talking about orders since it is a square matrix.
+        if(order == 0){
+            return 0;
+        }
+        // If we have reached here it means that the order it at least 1.
+        boolean[][] endlessRowDp = new boolean[order][order];
+        boolean[][] endlessColumnDp = new boolean[order][order];
+
+        // Filling out the endless rows matrix.
+
+        // First filling out the base cases for smooth running ahead i.e. the last column.
+        for(int i = order - 1; i >= 0; i--){
+            if(grid[i][order - 1] == 1){
+                endlessRowDp[i][order - 1] = true;
+            }
+            // by default they are false only.
+        }
+
+        // Then filling the remaining things essentially.
+        for(int i = order - 1; i >= 0; i--){
+            for(int j = order - 2; j >= 0; j--){
+                if(grid[i][j] == 1 && endlessRowDp[i][j + 1]){
+                    endlessRowDp[i][j] = true;
+                }
+                // no need for assigning them false again as they already are.
+            }
+        }
+
+        // Filling out the endless columns matrix similarly.
+
+        for(int j = 0; j < order; j++){
+            if(grid[order - 1][j] == 1){
+                endlessColumnDp[order - 1][j] = true;
+            }
+        }
+
+        for(int j = 0; j < order; j++){
+            for(int i = order - 2; i >= 0; i--){
+                if(grid[i][j] == 1 && endlessColumnDp[i + 1][j]){
+                    endlessColumnDp[i][j] = true;
+                }
+            }
+        }
+
+        int numberOfEndlessPoints = 0;
+
+        for(int i = 0; i < order; i++){
+            for(int j = 0; j < order; j++){
+                if(endlessRowDp[i][j] && endlessColumnDp[i][j]){
+                    numberOfEndlessPoints++;
+                }
+            }
+        }
+
+        return numberOfEndlessPoints;
+    }
+
+}
