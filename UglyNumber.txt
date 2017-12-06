@@ -1,0 +1,162 @@
+/*
+    Ugly Numbers are the numbers whose prime factors are 2, 3 or 5. The sequence 1, 2, 3, 4, 5, 6, 8, 9,
+    10, 12, 15 .... shows the first 11 ugly numbers. By convention, 1 is included.
+
+    Now our task is we have to find the nth ugly input given an input n ofcourse.
+
+    Every ugly number that can ever be formed must be of the formed is of the form
+        (2^x) * (3^y) * (5^z) where x, y, z are whole numbers(as the lowest ugly number is 1).
+
+    Clearly I could spot a recurrence relation after seeing this general format of an ugly number.
+    This ugly number can be written as either of the three cases given below ->
+
+        1. (2^x) * (3^y) * (5^z) = (2^(x-1)) * (3^y) * (5^z)
+        2. (2^x) * (3^y) * (5^z) = (2^x) * (3^(y-1)) * (5^z)
+        3. (2^x) * (3^y) * (5^z) = (2^x) * (3^y) * (5^(z-1))
+
+    No matter from where you come from(by multiplying what!) you have to do these steps
+    eventually. We can frame it in more simple words as the main ugly number can be formed from these
+    smaller(obviously) three ugly numbers only.
+
+    So we know that by now that an ugly number must be formed from at least one of these smaller ugly
+    numbers either by multiplying 2 or by 3 or by 5. Now everything should eventually come to 1 i.e.
+    everything should start at 1 as it is the first ugly number.
+
+    Now lets analyse this more deeply. We are start at 1. Now we can either make 2(1 X 2) or 3(1 X 3)
+    or 5(1 X 5). The next ugly number has to be one among these for sure and it would be 2 as it is the
+    smallest. We can very well say this by intuition and also by contradiction(Lets say we have an ugly number
+    which is less than 2. Now clearly since it is an ugly number it must be formed from some ugly number.
+    Now using 1 we can only form 2, 3 and 5 and it is the first ugly number. So we cant form anything smaller than
+    2 otherwise 1 wouldn't be the first ugly number. I know its obvious but just for the purpose of prooving it
+    and I am saying.) Hence the next ugly number is 2. We have this sequence with us till now ->
+
+                    1, 2,
+
+    Now its obvious that the next ugly number must be formed from these ugly numbers as there is no other option.
+    So it can be 3(1 X 3) or 5(1 X 5) or 4(2 X 2). Note that it cant be 2(1 X 2) as we have already used it up and
+    it cant be 6(2 X 3) and 10(2 X 5). This is very easy to argue. Since we haven't used up the 3 and 5 multiples of
+    a lower ugly number we cant use it of a higher ugly number as it wont definitely be the next as it is bigger obviously.
+    We choose 3 among these candidates as it is the smallest. Hence we can say that ->
+
+                   1, 2, 3,
+
+    We can proceed in this manner. So in a nutshell the logic is an ugly number is formed smaller ugly numbers definitely
+    by either multiplying it with 2 or 3 or 5. So at every step to determine the next ugly number we see all these multiples
+    of the formed ugly numbers(which are not chosen of course and also which cant be the next ugly number of course using a bit of
+    cleverness here). We will get only three choices which would be counters of (X 2), (X 3) or (X 5) which progressively moves
+    from the bottom up(Dynamic Programming).
+ */
+
+public class UglyNumber {
+
+    public int findNthUglyNumber(int n){
+        // I am assuming the input is not senseless here and the client wants to genuinely find the nth ugly number.
+        int[] dp = new int[n + 1]; // hence its length is atleast 2.
+        dp[1] = 1; // the first ugly number is 1 and it wouldn't be a compile time error for sure.
+        // all of them initially point to the first index as the next candidate has to be among them.
+        int twoCounter = 1;
+        int threeCounter = 1;
+        int fiveCounter = 1;
+        for(int i = 2; i <= n; i++){
+            if(dp[twoCounter] * 2 <= dp[threeCounter] * 3){ // dp[twoCounter] * 2 can be equal to dp[threeCounter] * 3 or less.
+                if(dp[twoCounter] * 2 <= dp[fiveCounter] * 5){ // dp[twoCounter] * 2 can be equal to dp[fiveCounter] * 5 or less.
+                    if(dp[twoCounter] * 2 == dp[fiveCounter] * 5){
+                        fiveCounter++; // this also has to be incremented then.
+                    }
+                    if(dp[twoCounter] * 2 == dp[threeCounter] * 3){
+                        threeCounter++; // this also has to be incremented then
+                    }
+                    dp[i] = dp[twoCounter] * 2;
+                    twoCounter++; // this has to get executed always.
+
+                }
+                else{ // dp[fiveCounter] * 5 has to be strictly less than dp[twoCounter] * 2
+                    dp[i] = dp[fiveCounter] * 5;
+                    fiveCounter++;
+                    // nothing else to do here as this is strictly the smallest and everything else is redundant.
+                }
+            }
+            else{ // dp[twoCounter] * 2 has to be strictly greater than dp[threeCounter] * 3
+                if(dp[threeCounter] * 3 <= dp[fiveCounter] * 5){ // dp[threeCounter] * 3 is definitely the smallest
+                    if(dp[threeCounter] * 3 == dp[fiveCounter] * 5){ // if they are equal
+                        fiveCounter++;
+                    }
+                    dp[i] = dp[threeCounter] * 3;
+                    threeCounter++; // this has to always get executed.
+                }
+                else{ // dp[fiveCounter] * 5 is strictly the smallest.
+                    dp[i] = dp[fiveCounter] * 5;
+                    fiveCounter++;
+                }
+            }
+        }
+        return dp[n];
+    }
+
+    /*
+        We can even do this by a naive approach. Start from 2 and go on... For every number you see
+        check whether the number is ugly or not. If the number is ugly, increment the ugly number counter
+        by 1. So basically you just have to do it until the ugly number counter becomes equal to the given
+        input.
+     */
+
+    public int findNthUglyNumberNaive(int n){
+        int ans = 1;
+        int uglyNumberCounter = 1;
+        int nextCandidate = 2;
+
+        while(uglyNumberCounter != n){
+            if(isUgly(nextCandidate)){
+                uglyNumberCounter++;
+                ans = nextCandidate;
+            }
+            nextCandidate++;
+        }
+
+        return ans;
+    }
+
+    /*
+        We know that an ugly number can be written as 2^x . 3^y . 5^z
+        Hence on dividing the number by the highest divisible power of
+        2 and highest divisible power of 3 and highest divisible power of
+        5, we should get 1.
+     */
+    private boolean isUgly(int candidate){
+        int highestDivisiblePowerOf2 = findhighest2Power(candidate);
+        int highestDivisiblePowerOf3 = findhighest3Power(candidate);
+        int highestDivisiblePowerOf5 = findhighest5Power(candidate);
+
+        int divisor = highestDivisiblePowerOf2 * highestDivisiblePowerOf3 * highestDivisiblePowerOf5;
+        if(candidate == divisor){
+            return true;
+        }
+
+        return false;
+    }
+
+    private int findhighest2Power(int candidate){
+        int highest2Power = 1; // (2 power 0)
+        while(candidate % highest2Power == 0){
+            highest2Power *= 2;
+        }
+        return highest2Power/2;
+    }
+
+    private int findhighest3Power(int candidate){
+        int highest3Power = 1; // (3 power 0)
+        while(candidate % highest3Power == 0){
+            highest3Power *= 3;
+        }
+        return highest3Power/3;
+    }
+
+    private int  findhighest5Power(int candidate){
+        int highest5Power = 1; // (5 power 0)
+        while(candidate % highest5Power == 0){
+            highest5Power *= 5;
+        }
+        return highest5Power/5;
+    }
+
+}
