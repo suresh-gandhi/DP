@@ -1,0 +1,108 @@
+/*
+    The problem is that we are given a string s. And we have to find among all of its subsequences the longest
+    subsequence which is a palindrome as well. In other words we have to find the longest palindromic subsequence :P
+
+    Now I can model this problem as finding the longest common subsequence for a string going from i to j. Here i
+    is the starting index and j is the ending index. I dont know why but just thinking over this problem while I
+    was in washroom(actually) I just realized that I should proceed in an bidirectional outwards fashion. I mean,
+    suppose we know what is the palindrome for any substring of the original string going from i to j, then we should
+    try to solve the problem of a substring going from (i - 1) to (j + 1). It may be because of the symmetry of
+    palindrome.
+
+    I will use some symbols. Please use your brains here. Lets say I want to find LPS(i, j). Now clearly I must have reached
+    to this substring (i, j) from the substring (i + 1, j - 1)(as I am going in a bidirectional outwards fasion simultaneously).
+    Now no matter what I add on both the sides to make the substring (i, j) there are only two possible things ->
+                1. Either I have added the same character to both the sides(let me call them X)
+                2. Or I have added different character to both the side(let me call them A and B)
+
+    Lets deal with the easy case first.
+
+    Let us assume that I add X to both the sides. Well, intuitively it clicks to me and I am pretty much sure it clicks to
+    any person in this world that the LPS(i, j) = LPS(i + 1, j - 1) + 2. This is all we have done here is added X on both the
+    sides to our existing solution of (i + 1, j - 1). Hey! But we cant say this is true because I feel it! Nopes. Things don't
+    work like this in logic and computer science. Intuition can be misleading sometimes. No worries. I will try to proove it
+    mathematically.
+    So we are saying that if I have any fuckin string str1 and I know that the longest palindromic subsequence of str1 is of length
+    L1. Then the longest palindromic subsequence length of a string str2 which is nothing but X-str1-X is L2 = L1 + 2. I go by contradiction.
+    Let us assume that the longest palindromic subsequence of str2 is of length L3 which is greater than L2 i.e.
+            L3 > L2
+    Now, let us assume that the palindrome of length L3 is P3. So, P3 is a palindrome right. So it has to have the same first as
+    well as the last characters. Now clearly, either the last character is X or !X. If it is not X, then we are saying..Wait Hold ON!
+    WTF! If it is not X then definitely P3 must be from (i + 1, j - 1). But we know that the longest palindromic sequence there was
+    of L1 length which is less than L2 itself forget about L3. So this case drops. Now let us assume that the palindromic sequence ends
+    at X(at both of the X's, it is true for other trivial argument as well). Now its length is L3 > L1 + 2. Now clearly, if I slice both
+    of these X's form P3 then also it should be a palindrome. Let me call it P3*. Now P3* lies (i + 1, j - 1) and has a length L3 - 2 which is
+    > L1 + 2 - 2 or > L1. Again its a contradiction! Hence we can say that our assumption was false.
+
+    So if you add same characters to both the sides. Then LPS(i, j) = LPS(i + 1, j - 1) + 2.
+
+    Now lets deal with the second case, where both the characters added are different. Let us say that these characters are
+    A and B at both the ends. The LCP(i, j) can't just end at A and B both. This is obvious because after it is a palindrome.
+    So it can either end at A or it can end at B or it can end at nothing at all. And these would comprise of all such
+    candidates. Let us first check the first case where all the candidates end at A. If we calculate LCS(i, j - 1). Then it would
+    take into account the affect of adding A and if adding A would have increased the palindromic sequence length from (i + 1, j - 1)
+    then it would have taken that into account else it would have given the same good old answer from (i + 1, j - 1). Similarly we
+    consider the effect of only adding B. Now here also (i + 1, j) would give us the required Palindromic subsequence. We dont
+    need to explicitly go for the third case. This is because we have already done that bro :| So if the character added are not
+    the same then ->
+                        LPS(i, j) = Max(LPS(i + 1, j), LPS(i, j - 1))
+    We are actually trying to exploit in this last step that adding two different characters can be analysed in terms of their effects
+    on adding individually and finding the max among them. This is because no such palindrome exists that end at different characters.
+
+    Its very easy to see here that the sub problems overlap here and I am not going to explain that for sure. Go ahead and draw the
+    recursion tree and it would be pretty neat to spot many such overlaps.
+
+    Clearly I should opt for dynamic programming here as the given problem has an optimal substructure as well as overlap occurs
+    among the sub problems. I would go here by bottom up method as I feel this is the amount of computation that would be done
+    anyhow.
+
+    If I analyse the structure of matrix and how it is filled up I can easily say that I need to fill the matrix in a diagonal
+    fashion.
+
+    Clearly the base case would be LPS(i, i) = 1.
+
+ */
+
+public class LongestPalindromicSubsequence {
+
+    public int findLengthOfTheLongestPalindromicSubsequence(String s){
+        if(s == null) {
+            System.out.println("You are an asshole and have an evil mind!");
+            // throw exception! just chillin..
+            return 0;
+        }
+        int length = s.length();
+        if(length == 0){
+            return 0; // handling empty strings separately.
+        }
+
+        int[][] dpMatrix = new int[length][length]; // half of this would be wasted and we could be more careful here
+                                                    // but anyways...
+
+        for(int i = 0; i < length; i++){
+            dpMatrix[i][i] = 1; // Every character is a palindrome in itself of length 1.
+        }
+
+        for(int i = 0, j = 1; j < length; j++){
+            int rowCounter = i;
+            int columnCounter = j;
+            while(rowCounter < length && columnCounter < length){ // move till that point till where you can because those are
+                                                                    // correct movements.
+                if(s.charAt(rowCounter) == s.charAt(columnCounter)){
+                    dpMatrix[rowCounter][columnCounter] = dpMatrix[rowCounter + 1][columnCounter - 1] + 2;
+                }
+                else { // necessary otherwise things would be spoiled.
+                    dpMatrix[rowCounter][columnCounter] = Math.max(
+                            dpMatrix[rowCounter + 1][columnCounter], dpMatrix[rowCounter][columnCounter - 1]);
+                }
+                // both of these lines ensure that we move in steps i.e. diagonally.
+                rowCounter++;
+                columnCounter++;
+            }
+        }
+
+        return dpMatrix[0][length - 1];
+    }
+}
+
+
