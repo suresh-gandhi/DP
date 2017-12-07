@@ -1,0 +1,76 @@
+/*
+    We are given a square matrix (N X N)(doesn't matter for this problem even if we are given a rectangular matrix.
+    Each cell in the matrix is associated with a specific cost. A path is defined as the sequence of cells which
+    starts at the top-left and move only right or down and ends on the bottom right cell eventually. We want to
+    find a path with the maximum average over all the existing paths. Average is computed as the total cost divided
+    by the number of cells visited in the path.
+
+    Now first of all average thing is an add on(with literally no meaning to it!). This is because if you want to reach
+    the bottom right from top left you have to always move (order - 1) right times and (order - 1) down. You can literally
+    skip any of them. Now actually their permutations would give us all the possible paths. However that is a separate thing.
+    So our denominator is fixed. This is because for all the paths that reach from the top-right to the bottom left, the number
+    of cells they visit is 2*order - 2 and no one can change it. So our problem simply reduces to finding the costliest path
+    to reach from top-left to the bottom-right.
+
+    I first assume that I have reached at the bottom-right point. Now clearly I could have come from the cell just above it
+    or from the cell to the left of it. Among all such paths that go through (i - 1, j)(the point above), let us assume
+    that we already know what is the path with the maximum cost. Similarly for the point (i, j - 1) we already the costliest
+    path to reach that point. I am trying to break my problem(which is C[i, j] i.e. max cost to reach a point (i, j)) in terms of
+    C[i - 1, j] and C[i, j - 1]. Now the maximum among them would be actually the best way to reach (i, j) among every possible
+    way to reach (i, j).
+
+    We can also easily argue that the sub problems overlap. (i, j) is dependent on (i - 1, j) and (i, j - 1). Now (i - 1, j)
+    is dependent on (i - 2, j) and (i - 1, j - 1). Also, (i, j - 1) is dependent on (i - 1, j - 1) and (i , j - 2). Here,
+    at (i - 1, j - 1) the overlap occurs. There will be more such overlaps and hence memoization is necessary to cut down
+    the complexity to polynomial time otherwise it would be exponential. One more subtle way in which we can argue that the
+    sub problems overlap is ->
+
+            We know that from any cell(i, j) we can go towards the right(i, j + 1) and also the bottom(i + 1, j). When we would
+            write the sob problems of (i + 1, j) then (i, j) has to be one of the child as (i + 1, j) is dependent on (i, j).
+            And similar argument can be made for the other node.
+
+     So its not apparent always that sub problem overlap occurs at the very first level children. Sometimes they may occur
+     at a depth of 2 as well. So one should be strict, rational and patient in making conclusions. Drawing the recursion
+     tree may actually help sometimes.
+
+   Hence DP is the best way to go :)
+
+   And everything needs to be calculated at least and I can very well see that, hence I would use dynamic programming with
+   a bottom up table formulation here.
+
+ */
+
+public class MaximumAverageValue {
+
+    // double because average needs to be returned out.
+    public double maxAveragePath(int[][] cost){
+        int order = cost.length;
+        if(order == 0){
+            return 0;
+        }
+        // the order is at least one if I have reached this step.
+
+        int[][] memoTable = new int[order][order];
+
+        memoTable[0][0] = cost[0][0]; // wont be a compile time error here.
+
+        // Filling up the base cases for smooth running ahead.
+        for(int i = 1; i < order; i++){
+            memoTable[i][0] += memoTable[i - 1][0] + cost[i][0];
+        }
+
+        for(int j = 1; j < order; j++){
+            memoTable[0][j] += memoTable[0][j - 1] + cost[0][j];
+        }
+
+        for(int i = 1; i < order; i++){
+            for(int j = 1; j < order; j++){
+                memoTable[i][j] = Math.max(memoTable[i - 1][j], memoTable[i][j - 1]) + cost[i][j];
+            }
+        }
+
+        return  ((double) memoTable[order - 1][order - 1] / (2 * order - 1)); // don't write the double, just
+                                                                            // take a look that what should be type casted!
+    }
+
+}
